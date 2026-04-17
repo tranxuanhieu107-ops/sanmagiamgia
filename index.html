@@ -13,12 +13,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
 
         :root { 
-            --primary: #ff4757; 
-            --dark: #2f3542; 
-            --success: #2ed573; 
-            --bg: #f1f2f6; 
-            --gray: #747d8c;
-            --accent: #fff9c4;
+            --primary: #ff4757; --dark: #2f3542; --success: #2ed573; 
+            --bg: #f1f2f6; --gray: #747d8c; --accent: #fff9c4;
         }
 
         body { font-family: 'Montserrat', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
@@ -36,14 +32,16 @@
         .btn-back-home { display: block; margin-top: 15px; padding: 14px; border: 2px solid var(--gray); color: var(--gray); text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 800; text-transform: uppercase; }
         .btn-link { background: none; color: var(--gray); text-decoration: underline; font-size: 13px; margin-top: 5px; cursor: pointer; border: none; display: block; width: 100%; }
 
-        .result-box { margin-top: 25px; padding: 30px 20px; border: 3px solid var(--success); border-radius: 25px; background: #fff; display: none; animation: popIn 0.5s ease; }
+        .result-box { margin-top: 25px; padding: 30px 20px; border: 3px solid var(--success); border-radius: 25px; background: #fff; display: none; }
         .voucher-val { font-size: 50px; color: var(--primary); font-weight: 900; display: block; margin: 5px 0; }
         .voucher-code { background: #f1f2f6; border: 2px dashed #ced6e0; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 26px; font-weight: 800; color: var(--dark); margin: 15px 0; }
 
         .condition-highlight { background: var(--accent); color: #856404; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 800; margin: 15px 0; border: 2px solid #ffeeba; }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        
+        /* Nhãn màu cam chỉ hiện khi được JS gọi */
+        .try-badge { background: #ff9f43; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; display: inline-block; margin-bottom: 10px; font-weight: 700; text-transform: uppercase; }
+        
         .hidden { display: none; }
-        .try-badge { background: #ff9f43; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; display: inline-block; margin-bottom: 10px; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -59,25 +57,26 @@
     </div>
 
     <div id="step-2" class="hidden">
-        <p>SĐT đang chọn: <strong id="display-phone" style="color: var(--primary)"></strong></p>
-        <button class="btn-real" onclick="spin(false)">QUAY THẬT (NHẬN QUÀ)</button>
+        <p>SĐT: <strong id="display-phone" style="color: var(--primary)"></strong></p>
+        <button class="btn-real" onclick="spin(false)">QUAY THẬT (LẤY QUÀ)</button>
         <button class="btn-try" onclick="spin(true)">QUAY THỬ (XẢ LÁNG)</button>
         <button class="btn-link" onclick="resetForm()">Sử dụng số khác</button>
     </div>
 
     <div id="result" class="result-box">
-        <div id="try-label" class="try-badge hidden">CHẾ ĐỘ QUAY THỬ</div>
-        <p id="msg-status" style="font-weight: bold; color: #57606f; margin: 0; font-size: 14px;"></p>
+        <div id="badge-container"></div> 
+        
+        <p id="msg-status" style="font-weight: bold; color: #57606f; margin: 0; font-size: 14px; text-transform: uppercase;"></p>
         <span class="voucher-val" id="res-val"></span>
         <div class="voucher-code" id="res-code"></div>
         <div id="res-cond" class="condition-highlight"></div>
         
         <div style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px;">
             <div id="try-again-area" class="hidden">
-                <button class="btn-try" onclick="backToStep2()">QUAY THỬ LẠI LẦN NỮA</button>
+                <button class="btn-try" onclick="backToStep2()">THỬ LẠI LẦN NỮA</button>
                 <button class="btn-real" onclick="backToStep2()">OK, QUAY THẬT LUÔN</button>
             </div>
-            <button id="btn-new-phone" class="btn-link" onclick="resetForm()">NHẬP SỐ ĐIỆN THOẠI MỚI</button>
+            <button class="btn-link" onclick="resetForm()">NHẬP SỐ ĐIỆN THOẠI MỚI</button>
             <a href="https://tranxuanhieu107-ops.github.io/pinkbabyapp/" class="btn-back-home">← TRANG CHỦ PINK BABY</a>
         </div>
     </div>
@@ -86,16 +85,17 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxYE1qRlWSkDJRscgJJh8KKn2hABbIDPQCSTil5Q-hin8o6ms_vCaicR2o4mUEc2FUi6g/exec";
     const PRIZES = [
-        { label: "10.000đ", weight: 80, cond: "Áp dụng đơn từ 300.000đ" },
-        { label: "20.000đ", weight: 10, cond: "Áp dụng đơn từ 500.000đ" },
-        { label: "50.000đ", weight: 7,  cond: "Áp dụng đơn từ 1.000.000đ" },
-        { label: "100.000đ", weight: 3, cond: "Áp dụng đơn từ 2.000.000đ" }
+        { label: "10.000đ", weight: 80, cond: "Đơn từ 300.000đ" },
+        { label: "20.000đ", weight: 10, cond: "Đơn từ 500.000đ" },
+        { label: "50.000đ", weight: 7,  cond: "Đơn từ 1.000.000đ" },
+        { label: "100.000đ", weight: 3, cond: "Đơn từ 2.000.000đ" }
     ];
 
     function checkUser() {
         const phone = $('#phone').val();
         if (!/^\d{10}$/.test(phone)) return alert("Nhập đúng 10 số!");
         $('.btn-check').prop('disabled', true).text("ĐANG KIỂM TRA...");
+        
         $.ajax({
             url: API_URL, data: { phone: phone }, dataType: 'jsonp',
             success: function(data) {
@@ -106,7 +106,7 @@
                     $('#step-1').hide(); $('#step-2').fadeIn(); $('#display-phone').text(phone);
                 }
             },
-            error: function() { alert("Lỗi API!"); $('.btn-check').prop('disabled', false).text("TIẾP TỤC"); }
+            error: function() { alert("Lỗi kết nối!"); $('.btn-check').prop('disabled', false).text("TIẾP TỤC"); }
         });
     }
 
@@ -125,19 +125,35 @@
         }
     }
 
-    // HÀM QUAN TRỌNG: Quay lại màn hình chọn Quay Thật/Thử mà không mất SĐT
-    function backToStep2() {
-        $('#result').hide();
-        $('#step-2').fadeIn();
+    function backToStep2() { 
+        $('#result').hide(); 
+        $('#badge-container').html(''); // Xóa sạch nhãn cam khi quay lại
+        $('#step-2').fadeIn(); 
     }
 
     function showFinalResult(val, code, cond, msg, isTry) {
-        $('#result').fadeIn(); $('#msg-status').text(msg); $('#res-val').text(val); $('#res-code').text(code); $('#res-cond').text(cond);
-        if(isTry) $('#try-label').removeClass('hidden'); else $('#try-label').addClass('hidden');
+        // CƠ CHẾ TRIỆT TIÊU LỖI:
+        const container = $('#badge-container');
+        container.html(''); // Bước 1: Xóa sạch nội dung cũ trong container nhãn
+        
+        if (isTry === true) {
+            // Bước 2: Chỉ khi là QUAY THỬ mới tạo thẻ nhãn cam mới hoàn toàn
+            container.html('<div class="try-badge">CHẾ ĐỘ QUAY THỬ</div>');
+        }
+
+        $('#result').fadeIn();
+        $('#msg-status').text(msg);
+        $('#res-val').text(val);
+        $('#res-code').text(code);
+        $('#res-cond').text(cond);
     }
 
     function resetForm() {
-        $('#result, #step-2').hide(); $('#step-1').fadeIn(); $('#phone').val('').focus(); $('.btn-check').prop('disabled', false).text("TIẾP TỤC");
+        $('#badge-container').html(''); // Xóa nhãn
+        $('#result, #step-2').hide(); 
+        $('#step-1').fadeIn(); 
+        $('#phone').val('').focus(); 
+        $('.btn-check').prop('disabled', false).text("TIẾP TỤC");
     }
 </script>
 </body>
